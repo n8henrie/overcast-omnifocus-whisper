@@ -1,0 +1,19 @@
+name: "CI"
+on:
+  pull_request:
+  push:
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: cachix/install-nix-action@v24
+    - run: nix flake check
+    - name: format
+      run: |
+        nix run nixpkgs#nixfmt-rfc-style -- --check **/*.nix
+    - name: lint
+      run: |
+        set -e
+        nix run nixpkgs#statix -- check
+        nix run nixpkgs#deadnix
