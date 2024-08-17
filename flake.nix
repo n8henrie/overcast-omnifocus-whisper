@@ -6,7 +6,7 @@
   outputs =
     { self, nixpkgs }:
     let
-      name = "overcast-whisper";
+      name = "overcast-omnifocus-whisper";
       systems = [
         "x86_64-darwin"
         "aarch64-darwin"
@@ -23,7 +23,29 @@
       {
         packages = {
           default = self.packages.${system}.${name};
-          ${name} = pkgs.hello;
+          ${name} = (pkgs.writeScriptBin name (builtins.readFile ./${name}.js)).overrideAttrs (old: {
+            buildCommand =
+              old.buildCommand
+              + ''
+                substituteInPlace $target \
+                  --replace-fail "\''${pwd}/run.sh" ${
+                    self.outputs.packages.${system}.run-whisper
+                  }/bin/overcast-omnifocus-whisper-run.sh
+
+                eval "$checkPhase"
+              '';
+          });
+          run-whisper = pkgs.writeShellApplication {
+            name = "overcast-omnifocus-whisper-run.sh";
+            runtimeInputs = with pkgs; [
+              curl
+              cacert
+              ffmpeg
+              libxml2
+              self.outputs.packages.${system}.whisper
+            ];
+            text = builtins.readFile ./run.sh;
+          };
 
           whisper = pkgs.callPackage ./whisper { };
         };
@@ -31,13 +53,6 @@
         apps.default = {
           type = "app";
           program = "${self.packages.${system}.${name}}/bin/${name}";
-        };
-
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            cargo
-            rust-analyzer
-          ];
         };
       }
     );
