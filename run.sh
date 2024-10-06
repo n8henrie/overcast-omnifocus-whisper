@@ -37,6 +37,6 @@ main() {
 
   # If success, return output to calling script, stripping first 2 lines
   # which are unrelated output (`pcm data loaded`)
-  tail -n+3 "${id}.txt"
+  tail -n+3 "${outfile}"
 }
 main "$@"
