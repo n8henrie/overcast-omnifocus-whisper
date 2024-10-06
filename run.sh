@@ -3,8 +3,8 @@ set -Eeuf -o pipefail
 trap 'rm -f "${outfile}" "${id}.sound" "${id}.sound.converted"' EXIT
 
 # global for use in trap
-id=${1:-} url=${2:-}
-outfile=${id}.txt
+readonly id=${1:-} url=${2:-}
+readonly outfile=${id}.txt
 
 main() {
   local outpath
