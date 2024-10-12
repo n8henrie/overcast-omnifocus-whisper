@@ -95,11 +95,11 @@
             };
             stdout = mkOption {
               type = types.str;
-              default = "${config.homeDirectory}/git/${name}/stdout.log";
+              default = "${config.home.homeDirectory}/git/${name}/stdout.log";
             };
             stderr = mkOption {
               type = types.str;
-              default = "${config.homeDirectory}/git/${name}/stderr.log";
+              default = "${config.home.homeDirectory}/git/${name}/stderr.log";
             };
           };
 
