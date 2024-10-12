@@ -39,12 +39,16 @@
             name = "overcast-omnifocus-whisper-run.sh";
             runtimeInputs = with pkgs; [
               curl
-              cacert
               ffmpeg
               libxml2
               self.outputs.packages.${system}.whisper
             ];
-            text = builtins.readFile ./run.sh;
+            text = ''
+              # shellcheck disable=1091
+              source ${pkgs.cacert}/nix-support/setup-hook
+
+              ${builtins.readFile ./run.sh}
+            '';
           };
 
           whisper = pkgs.callPackage ./whisper { };
