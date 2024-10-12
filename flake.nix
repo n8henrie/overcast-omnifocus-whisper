@@ -93,6 +93,14 @@
                 };
               default = { };
             };
+            stdout = mkOption {
+              type = types.str;
+              default = "${config.homeDirectory}/git/${name}/stdout.log";
+            };
+            stderr = mkOption {
+              type = types.str;
+              default = "${config.homeDirectory}/git/${name}/stderr.log";
+            };
           };
 
           config = {
@@ -102,6 +110,8 @@
                 Label = "com.n8henrie.${name}";
                 ProgramArguments = [ "${self.outputs.packages.${pkgs.system}.${name}}/bin/${name}" ];
                 StartCalendarInterval = [ { inherit (cfg.schedule) Hour Minute; } ];
+                StandardOutPath = cfg.stdout;
+                StandardErrorPath = cfg.stderr;
               };
             };
           };
