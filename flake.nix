@@ -108,7 +108,7 @@
               enable = true;
               config = {
                 Label = "com.n8henrie.${name}";
-                ProgramArguments = [ "${self.outputs.packages.${pkgs.system}.${name}}/bin/${name}" ];
+                ProgramArguments = [ "${self.outputs.packages.${pkgs.stdenv.hostPlatform.system}.${name}}/bin/${name}" ];
                 StartCalendarInterval = [ { inherit (cfg.schedule) Hour Minute; } ];
                 StandardOutPath = cfg.stdout;
                 StandardErrorPath = cfg.stderr;
