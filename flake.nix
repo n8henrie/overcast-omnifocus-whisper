@@ -57,6 +57,24 @@
         apps.default = {
           type = "app";
           program = "${self.packages.${system}.${name}}/bin/${name}";
+
+        checks = self.packages.${system} // {
+          lint =
+            pkgs.runCommand "check-${name}"
+              {
+                src = ./.;
+                nativeBuildInputs = with pkgs; [
+                  deadnix
+                  nixfmt
+                  statix
+                ];
+              }
+              ''
+                deadnix .
+                statix check
+                find . -name '*.nix' -exec nixfmt --check {} +
+                touch $out
+              '';
         };
       }
     )
