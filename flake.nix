@@ -57,6 +57,8 @@
         apps.default = {
           type = "app";
           program = "${self.packages.${system}.${name}}/bin/${name}";
+          meta.description = "run ${name}";
+        };
 
         checks = self.packages.${system} // {
           lint =
