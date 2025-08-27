@@ -24,16 +24,14 @@
         packages = {
           default = self.packages.${system}.${name};
           ${name} = (pkgs.writeScriptBin name (builtins.readFile ./${name}.js)).overrideAttrs (old: {
-            buildCommand =
-              old.buildCommand
-              + ''
-                substituteInPlace $target \
-                  --replace-fail "\''${pwd}/run.sh" ${
-                    self.outputs.packages.${system}.run-whisper
-                  }/bin/overcast-omnifocus-whisper-run.sh
+            buildCommand = old.buildCommand + ''
+              substituteInPlace $target \
+                --replace-fail "\''${pwd}/run.sh" ${
+                  self.outputs.packages.${system}.run-whisper
+                }/bin/overcast-omnifocus-whisper-run.sh
 
-                eval "$checkPhase"
-              '';
+              eval "$checkPhase"
+            '';
           });
           run-whisper = pkgs.writeShellApplication {
             name = "overcast-omnifocus-whisper-run.sh";
@@ -128,7 +126,9 @@
               enable = true;
               config = {
                 Label = "com.n8henrie.${name}";
-                ProgramArguments = [ "${self.outputs.packages.${pkgs.stdenv.hostPlatform.system}.${name}}/bin/${name}" ];
+                ProgramArguments = [
+                  "${self.outputs.packages.${pkgs.stdenv.hostPlatform.system}.${name}}/bin/${name}"
+                ];
                 StartCalendarInterval = [ { inherit (cfg.schedule) Hour Minute; } ];
                 StandardOutPath = cfg.stdout;
                 StandardErrorPath = cfg.stderr;
