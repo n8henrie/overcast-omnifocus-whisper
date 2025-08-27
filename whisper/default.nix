@@ -1,7 +1,7 @@
 {
   rustPlatform,
   fetchFromGitHub,
-  darwin,
+  apple-sdk,
   stdenv,
   lib,
 }:
@@ -28,15 +28,7 @@ rustPlatform.buildRustPackage {
     ln -s ${./Cargo.lock} Cargo.lock
   '';
   cargoBuildFlags = [ "--example whisper" ];
-  buildInputs = lib.optionals stdenv.isDarwin (
-    with darwin.apple_sdk.frameworks;
-    [
-      Accelerate
-      Metal
-      MetalPerformanceShaders
-      Security
-    ]
-  );
+  buildInputs = lib.optionals stdenv.isDarwin [ apple-sdk ];
   postInstall =
     let
       cargoTarget = rustPlatform.cargoInstallHook.targetSubdirectory;
