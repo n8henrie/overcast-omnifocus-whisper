@@ -19,7 +19,7 @@ rustPlatform.buildRustPackage {
   };
   cargoLock.lockFile = ./Cargo.lock;
   buildAndTestSubdir = "candle-examples";
-  buildFeatures = lib.optionals stdenv.isDarwin [
+  buildFeatures = lib.optionals stdenv.hostPlatform.isDarwin [
     "accelerate"
     "metal"
     "symphonia"
@@ -28,7 +28,7 @@ rustPlatform.buildRustPackage {
     ln -s ${./Cargo.lock} Cargo.lock
   '';
   cargoBuildFlags = [ "--example whisper" ];
-  buildInputs = lib.optionals stdenv.isDarwin [ apple-sdk ];
+  buildInputs = lib.optionals stdenv.hostPlatform.isDarwin [ apple-sdk ];
   postInstall =
     let
       cargoTarget = rustPlatform.cargoInstallHook.targetSubdirectory;
