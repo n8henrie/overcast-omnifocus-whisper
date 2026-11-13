@@ -18,14 +18,14 @@ The idea is that I can:
 The parts of script:
 - My iOS shortcut is available at [https://www.icloud.com/shortcuts/24cf4a7790fe4cdca3a8ca0eeeb9e462](); I'm not sure if there is a way to include its source contents
 - `whisper` is from [https://github.com/huggingface/candle](), compiled with a few features to make it a little faster
-- `run.sh` accepts an OmniFocus task ID and Overcast URL to:
+- `transcribe.sh` accepts an OmniFocus task ID and Overcast URL to:
   - downloads the audio file
   - convert with ffmpeg
   - performs the transcription with `whisper`
   - copy the transcript to stdout
 - `overcast-omnifocus-whisper.js` is the primary entrypoint, a JXA script that contains an embedded OmniFocus Automation script to:
   - retrieve tasks that contain an Overcast URL in the note
-  - run `run.sh` and collect the output
+  - run `transcribe.sh` and collect the output
   - overwrite the task note with a note that contains the transcript
 
 nix (+ flake) users should be able to run all of this machinery with minimal effort: `nix run github:n8henrie/overcast-omnifocus-whisper`

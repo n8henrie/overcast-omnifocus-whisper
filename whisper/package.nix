@@ -4,6 +4,8 @@
   apple-sdk,
   stdenv,
   lib,
+  pkg-config,
+  oniguruma,
 }:
 let
   pname = "whisper";
@@ -28,7 +30,8 @@ rustPlatform.buildRustPackage {
     ln -s ${./Cargo.lock} Cargo.lock
   '';
   cargoBuildFlags = [ "--example whisper" ];
-  buildInputs = lib.optionals stdenv.hostPlatform.isDarwin [ apple-sdk ];
+  nativeBuildInputs = [ pkg-config ];
+  buildInputs = [ oniguruma ] ++ lib.optionals stdenv.hostPlatform.isDarwin [ apple-sdk ];
   postInstall =
     let
       cargoTarget = rustPlatform.cargoInstallHook.targetSubdirectory;

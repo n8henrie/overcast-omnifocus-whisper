@@ -2,24 +2,25 @@
 
 'use strict'
 
+const omnifocus = Application("OmniFocus")
+const app = Application.currentApplication()
+app.includeStandardAdditions = true
+
 function run(argv) {
-	let omnifocus = Application("OmniFocus")
-	let app = Application.currentApplication()
-    app.includeStandardAdditions = true
-    
+	let transcribeScript = argv[0]
 	let code = `(() => {
 		const re = new RegExp("^https://overcast\.fm");
 		return (
 			flattenedTasks
 				.filter(task => re.test(task.note) && !task.completed)
-				
+
 				// Can only return primitive types, no Objects
 				.map(task => [task.id.primaryKey, task.note])
 		)
 	})()`
-	
+
   var results = omnifocus.evaluateJavascript(code)
-	
+
 	results.forEach(arr => {
 		let note = arr[1]
 
@@ -30,9 +31,9 @@ function run(argv) {
 		let timeMatches = url.match(reTime)
 
 		let task = {id: arr[0], url: url}
-		
-		let transcript = process(app, task)
-		
+
+		let transcript = app.doShellScript(`${transcribeScript} "${task.id}" "${task.url}"`)
+
 		let newNote
 		if (timeMatches !== null) {
 			let time = timeMatches[0].replace(/^\//, "")
@@ -44,25 +45,13 @@ function run(argv) {
 		}
 
 		setNote(omnifocus, task.id, newNote)
-	})	
+	})
   return
 }
 
 function setNote(omnifocus, id, text) {
 	let code = `(() => {
 		Task.byIdentifier("${id}").note = \`${text}\`
-	})()`	
+	})()`
   return omnifocus.evaluateJavascript(code)
-}
-
-function process(app, task) {
-	var env = $.NSProcessInfo.processInfo.environment
-	env = ObjC.unwrap(env)
-	const pwd = ObjC.unwrap(env["PWD"])
-
-	return app.doShellScript(`\
-		${pwd}/run.sh \
-			"${task.id}" \
-			"${task.url}" \
-	`)
 }

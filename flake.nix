@@ -7,134 +7,52 @@
     { self, nixpkgs }:
     let
       name = "overcast-omnifocus-whisper";
-      systems = [
-        "x86_64-darwin"
-        "aarch64-darwin"
-      ];
-      eachSystem =
-        with nixpkgs.lib;
-        f: foldAttrs mergeAttrs { } (map (s: mapAttrs (_: v: { ${s} = v; }) (f s)) systems);
+      system = "aarch64-darwin";
+      pkgs = nixpkgs.legacyPackages.${system};
     in
-    eachSystem (
-      system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-      in
-      {
-        packages = {
-          default = self.packages.${system}.${name};
-          ${name} = (pkgs.writeScriptBin name (builtins.readFile ./${name}.js)).overrideAttrs (old: {
-            buildCommand = old.buildCommand + ''
-              substituteInPlace $target \
-                --replace-fail "\''${pwd}/run.sh" ${
-                  self.outputs.packages.${system}.run-whisper
-                }/bin/overcast-omnifocus-whisper-run.sh
+    {
+      packages.${system} = {
+        default = self.packages.${system}.${name};
+        ${name} = pkgs.writeShellApplication {
+          inherit name;
+          runtimeInputs = with pkgs; [
+            curl
+            ffmpeg
+            libxml2
+            pkgs.cacert
+            self.outputs.packages.${system}.whisper
+          ];
+          text = "${./overcast-omnifocus-whisper.js} ${./transcribe.sh}";
+        };
 
-              eval "$checkPhase"
+        whisper = pkgs.callPackage ./whisper/package.nix { };
+      };
+
+      apps.${system}.default = {
+        type = "app";
+        program = nixpkgs.lib.getExe self.packages.${system}.${name};
+        meta.description = "run ${name}";
+      };
+
+      checks.${system} = self.packages.${system} // {
+        lint =
+          pkgs.runCommand "check-${name}"
+            {
+              src = nixpkgs.lib.cleanSource ./.;
+              nativeBuildInputs = with pkgs; [
+                deadnix
+                nixfmt
+                statix
+              ];
+            }
+            ''
+              deadnix .
+              statix check
+              find . -name '*.nix' -exec nixfmt --check {} +
+              touch $out
             '';
-          });
-          run-whisper = pkgs.writeShellApplication {
-            name = "overcast-omnifocus-whisper-run.sh";
-            runtimeInputs = with pkgs; [
-              curl
-              ffmpeg
-              libxml2
-              self.outputs.packages.${system}.whisper
-            ];
-            text = ''
-              # shellcheck disable=1091
-              source ${pkgs.cacert}/nix-support/setup-hook
+      };
 
-              ${builtins.readFile ./run.sh}
-            '';
-          };
-
-          whisper = pkgs.callPackage ./whisper { };
-        };
-
-        apps.default = {
-          type = "app";
-          program = "${self.packages.${system}.${name}}/bin/${name}";
-          meta.description = "run ${name}";
-        };
-
-        checks = self.packages.${system} // {
-          lint =
-            pkgs.runCommand "check-${name}"
-              {
-                src = ./.;
-                nativeBuildInputs = with pkgs; [
-                  deadnix
-                  nixfmt
-                  statix
-                ];
-              }
-              ''
-                deadnix .
-                statix check
-                find . -name '*.nix' -exec nixfmt --check {} +
-                touch $out
-              '';
-        };
-      }
-    )
-    // {
-      homeManagerModules.default =
-        {
-          pkgs,
-          lib,
-          config,
-          ...
-        }:
-        let
-          cfg = config.services.${name};
-        in
-        {
-          options.services.${name} = with lib; {
-            enable = mkEnableOption name;
-            schedule = mkOption {
-              type =
-                with types;
-                submodule {
-                  options = {
-                    Hour = mkOption {
-                      type = ints.between 0 23;
-                      description = "Hour of day to run";
-                      default = 1;
-                    };
-                    Minute = mkOption {
-                      type = ints.between 0 59;
-                      description = "Minute of the hour to run";
-                      default = 5;
-                    };
-                  };
-                };
-              default = { };
-            };
-            stdout = mkOption {
-              type = types.str;
-              default = "${config.home.homeDirectory}/git/${name}/stdout.log";
-            };
-            stderr = mkOption {
-              type = types.str;
-              default = "${config.home.homeDirectory}/git/${name}/stderr.log";
-            };
-          };
-
-          config = {
-            launchd.agents.${name} = {
-              enable = true;
-              config = {
-                Label = "com.n8henrie.${name}";
-                ProgramArguments = [
-                  "${self.outputs.packages.${pkgs.stdenv.hostPlatform.system}.${name}}/bin/${name}"
-                ];
-                StartCalendarInterval = [ { inherit (cfg.schedule) Hour Minute; } ];
-                StandardOutPath = cfg.stdout;
-                StandardErrorPath = cfg.stderr;
-              };
-            };
-          };
-        };
+      homeManagerModules.default = import ./hm-module.nix self;
     };
 }
