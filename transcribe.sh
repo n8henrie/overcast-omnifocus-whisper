@@ -16,9 +16,14 @@ main() {
     exit
   fi
 
+  local html shownotes source
+  html=$(curl --location "${url}")
   source=$(
-    curl --location "${url}" |
-      xmllint --html --xpath '//audio/source/@src' - 2> /dev/null |
+    xmllint --html --xpath '//audio/source/@src' - <<< "${html}" 2> /dev/null |
+      awk -F'"' '{ print $2 }'
+  )
+  shownotes=$(
+    xmllint --html --xpath '//a[text()="Website"]/@href' - <<< "${html}" 2> /dev/null |
       awk -F'"' '{ print $2 }'
   )
 
@@ -35,8 +40,11 @@ main() {
 
   whisper --input "${id}.sound.converted" > "${outfile}"
 
-  # If success, return output to calling script, stripping first 2 lines
-  # which are unrelated output (`pcm data loaded`)
+  # return output to calling script
+  if [[ -n "${shownotes}" ]]; then
+    printf 'shownotes: %s\n' "${shownotes}"
+  fi
+  # first 2 lines are unrelated output (`pcm data loaded`)
   tail -n+3 "${outfile}"
 }
 main "$@"
