@@ -13,18 +13,9 @@
     {
       packages.${system} = {
         default = self.packages.${system}.${name};
-        ${name} = pkgs.writeShellApplication {
-          inherit name;
-          runtimeInputs = with pkgs; [
-            curl
-            ffmpeg
-            libxml2
-            pkgs.cacert
-            self.outputs.packages.${system}.whisper
-          ];
-          text = "${./overcast-omnifocus-whisper.js} ${./transcribe.sh}";
-        };
-
+        ${name} = pkgs.callPackage ./package.nix {
+          inherit (self.outputs.packages.${system}) whisper;
+        } "overcast-omnifocus-whisper";
         whisper = pkgs.callPackage ./whisper/package.nix { };
       };
 
