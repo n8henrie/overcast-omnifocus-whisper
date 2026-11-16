@@ -1,4 +1,3 @@
-flake:
 {
   pkgs,
   lib,
@@ -12,6 +11,7 @@ in
 {
   options.services.${name} = with lib; {
     enable = mkEnableOption name;
+    package = mkPackageOption pkgs name { };
     schedule = mkOption {
       type =
         with types;
@@ -45,9 +45,7 @@ in
     enable = true;
     config = {
       Label = "com.n8henrie.${name}";
-      ProgramArguments = [
-        (lib.getExe flake.outputs.packages.${pkgs.stdenv.hostPlatform.system}.${name})
-      ];
+      ProgramArguments = [ (lib.getExe cfg.package) ];
       StartCalendarInterval = [ { inherit (cfg.schedule) Hour Minute; } ];
       StandardOutPath = cfg.stdout;
       StandardErrorPath = cfg.stderr;

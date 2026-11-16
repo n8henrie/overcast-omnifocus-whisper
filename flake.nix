@@ -43,7 +43,6 @@
               touch $out
             '';
       };
-
-      homeManagerModules.default = import ./hm-module.nix self;
+      homeManagerModules.default = ./hm-module.nix;
     };
 }
