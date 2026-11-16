@@ -15,7 +15,7 @@
         default = self.packages.${system}.${name};
         ${name} = pkgs.callPackage ./package.nix {
           inherit (self.outputs.packages.${system}) whisper;
-        } "overcast-omnifocus-whisper";
+        };
         whisper = pkgs.callPackage ./whisper/package.nix { };
       };
 
